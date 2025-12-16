@@ -19,3 +19,17 @@ if [ ! -s output/last_employees.csv ]; then
     echo "Initial snapshot saved. No changes processed." | tee -a "$LOG_FILE"
     exit 0
 fi
+
+tail -n +2 employees.csv | sort > /tmp/current.csv
+sort output/last_employees.csv > /tmp/previous.csv
+
+comm -13 /tmp/previous.csv /tmp/current.csv > /tmp/added.csv
+comm -23 /tmp/previous.csv /tmp/current.csv > /tmp/removed.csv
+
+awk -F',' '$5 == "terminated" {print}' /tmp/current.csv > /tmp/terminated.csv
+
+ADDED_COUNT=$(wc -l < /tmp/added.csv)
+REMOVED_COUNT=$(wc -l < /tmp/removed.csv)
+TERMINATED_COUNT=$(wc -l < /tmp/terminated.csv)
+
+echo "Added: $ADDED_COUNT | Removed: $REMOVED_COUNT | Terminated: $TERMINATED_COUNT" >> "$LOG_FILE"
