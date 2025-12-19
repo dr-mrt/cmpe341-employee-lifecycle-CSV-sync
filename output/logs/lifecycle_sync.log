@@ -3,3 +3,54 @@ First run detected. Initializing snapshot.
 Initial snapshot saved. No changes processed.
 [2025-12-16_14-36-26] Lifecycle sync started
 Added: 0 | Removed: 0 | Terminated: 1
+[2025-12-16_14-40-04] Lifecycle sync started
+Added: 0 | Removed: 0 | Terminated: 1
+[2025-12-16_14-49-12] Lifecycle sync started
+Added: 0 | Removed: 0 | Terminated: 1
+[2025-12-16_14-52-32] Lifecycle sync started
+Added:  | Removed:  | Terminated: 
+[2025-12-16_14-55-26] Lifecycle sync started
+Added:  | Removed:  | Terminated: 
+[2025-12-19_20-49-19] Lifecycle sync started
+Added:  | Removed:  | Terminated: 
+Offboard skipped (user not found): dilara.sahin
+[2025-12-19_20-51-05] Lifecycle sync started
+Added: 0 | Removed: 0 | Terminated: 1
+Offboard skipped (user not found): dilara.sahin
+[2025-12-19_20-57-11] Lifecycle sync started
+Added: 1 | Removed: 0 | Terminated: 1
+Group created: data
+User created: final.test
+User final.test added to group data
+Offboard skipped (user not found): dilara.sahin
+[2025-12-19_20-59-45] Lifecycle sync started
+Added: 1 | Removed: 0 | Terminated: 1
+User final.test added to group data
+Offboard skipped (user not found): dilara.sahin
+Snapshot updated.
+Temporary files cleaned up.
+Lifecycle sync completed.
+[2025-12-19_21-06-50] Lifecycle sync started
+Added: 0 | Removed: 0 | Terminated: 1
+Offboard skipped (user not found): dilara.sahin
+Snapshot updated.
+Temporary files cleaned up.
+Lifecycle sync completed.
+Manager report emailed to iremkeser@stu.khas.edu.tr
+[2025-12-19_21-10-42] Lifecycle sync started
+Added: 0 | Removed: 0 | Terminated: 1
+Offboard skipped (user not found): dilara.sahin
+Snapshot updated.
+Temporary files cleaned up.
+Lifecycle sync completed.
+Manager report emailed to iremkeser@stu.khas.edu.tr
+[2025-12-19_21-12-46] Lifecycle sync started
+Added: 1 | Removed: 0 | Terminated: 1
+Group created: hr
+User created: charlie.new
+User charlie.new added to group hr
+Offboard skipped (user not found): dilara.sahin
+Snapshot updated.
+Temporary files cleaned up.
+Lifecycle sync completed.
+Manager report emailed to iremkeser@stu.khas.edu.tr

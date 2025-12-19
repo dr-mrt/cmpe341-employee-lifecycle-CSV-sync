@@ -1,0 +1,15 @@
+Manager Employee Update
+Timestamp: 2025-12-19_21-06-50
+Mode: LIVE
+
+Summary
+Added employees (active): 0
+Removed employees: 0
+Offboarded by status: 1
+
+Added (username, department)
+None
+
+Removed (username, department)
+None
+
