@@ -48,10 +48,10 @@ SMTP_PASS="abcdefghijklmnop"         # Google app password
 ### 2. Execution Steps
 1.  `employees.csv` should be in the same folder as the script
 2.  ```bash
-    chmod +x lifecycle_sync.sh
+    chmod +x employee_lifecycle_sync.sh
     ```
 3. ```bash
-    sudo ./lifecycle_sync.sh
+    sudo ./employee_lifecycle_sync.sh
     ```
 
 ### 3. Output Locations
