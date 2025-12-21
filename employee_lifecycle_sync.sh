@@ -16,6 +16,13 @@ ADDED_USERS_LIST="./tmp/added.csv"
 REMOVED_USERS_LIST="./tmp/removed.csv"
 TERMINATED_USERS_LIST="./tmp/terminated.csv"
 
+ADMIN_EMAIL="durumert@stu.khas.edu.tr"
+
+SMTP_ENABLED="true"
+SMTP_SERVER="smtps://smtp.gmail.com:465"
+SMTP_USER="durumert11@gmail.com"
+SMTP_PASS="lidmlmrhvrwrpluu" 
+
 mkdir -p "$LOG_DIR"
 echo "[$DATE] Lifecycle sync started" >> "$LOG_FILE"
 
@@ -27,8 +34,6 @@ function initialize_workspace() {
         echo "Initial snapshot saved. No changes processed." | tee -a "$LOG_FILE"
     fi
 }
-
-initialize_workspace
 
 if [ ! -f employees.csv ]; then
     echo "employees.csv not found. Exiting." | tee -a "$LOG_FILE"
@@ -48,9 +53,6 @@ function detect_changes() {
 
     echo "Changes detected" >> "$LOG_FILE"
 }
-
-sort_data
-detect_changes
 
 function onboard_user() {
     local username="$1"
@@ -162,20 +164,53 @@ function generate_report() {
     } > "$REPORT_FILE"
 }
 
+function cleanup() {
+    cp "$SORTED_CURRENT" "$SNAPSHOT_FILE"
+    echo "Snapshot updated." >> "$LOG_FILE"
+    rm -rf ./tmp
+    echo "Temporary files cleaned up." >> "$LOG_FILE"
+    echo "Lifecycle sync completed." >> "$LOG_FILE"
+}
+
+function mail_report() {
+    local report_path=$1 
+    local subject="Manager Employee Lifecycle Report"
+
+    if [ "$SMTP_ENABLED" == "true" ]; then
+        curl --url "$SMTP_SERVER" \
+             --ssl-reqd \
+             --mail-from "$SMTP_USER" \
+             --mail-rcpt "$ADMIN_EMAIL" \
+             --user "$SMTP_USER:$SMTP_PASS" \
+             -T <(echo -e "From: $SMTP_USER\nTo: $ADMIN_EMAIL\nSubject: $subject\n\n$(cat $report_path)") \
+             --silent
+        if [ $? -eq 0 ]; then
+            echo "  [SUCCESS] Email sent successfully via SMTP."
+        else
+            echo "  [ERROR] SMTP send failed. Please check credentials."
+        fi
+    else
+        # Standard Submission Requirement (Mailutils)
+        echo "  [STANDARD] Sending email via local mail command..."
+        if command -v mail &> /dev/null; then
+            mail -s "$subject" "$ADMIN_EMAIL" < "$report_path"
+            echo "  [SUCCESS] Email passed to local mail system."
+        else
+            echo "  [ERROR] 'mail' command not found. Install mailutils or enable SMTP bonus."
+        fi
+    fi
+
+    echo "Manager report emailed to $ADMIN_EMAIL" >> "$LOG_FILE"
+}
+
+initialize_workspace
+sort_data
+detect_changes
 process_added
 process_removed
 process_terminated
 generate_report
+cleanup
+mail_report "$REPORT_FILE"
 
-cp "$SORTED_CURRENT" "$SNAPSHOT_FILE"
-echo "Snapshot updated." >> "$LOG_FILE"
-
-rm -rf ./tmp
-echo "Temporary files cleaned up." >> "$LOG_FILE"
-echo "Lifecycle sync completed." >> "$LOG_FILE"
-
-MAIL_TO="iremkeser@stu.khas.edu.tr"
-
-mail -s "Manager Employee Lifecycle Report - $DATE" "$MAIL_TO" < "$REPORT_FILE"
-
-echo "Manager report emailed to $MAIL_TO" >> "$LOG_FILE"
+exit 0 

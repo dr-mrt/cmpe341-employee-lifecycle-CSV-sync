@@ -7,4 +7,5 @@ employee_id,username,name_surname,department,status
 20007,oguz.demir,Oğuz Demir,data,active
 50001,final.test,Final Test,data, terminated 
 1003,charlie.new,Charlie New,hr,active
-50002, deniz.yilmaz, Deniz Yılmaz, data, active
+50002,deniz.yilmaz,Deniz Yılmaz,data,terminated
+20008,sude.uzun,Sude Uzun,dev,active
