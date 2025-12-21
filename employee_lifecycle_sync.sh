@@ -16,7 +16,7 @@ ADDED_USERS_LIST="./tmp/added.csv"
 REMOVED_USERS_LIST="./tmp/removed.csv"
 TERMINATED_USERS_LIST="./tmp/terminated.csv"
 
-ADMIN_EMAIL="durumert@stu.khas.edu.tr"
+ADMIN_EMAIL="uzunzsude@gmail.com"
 
 SMTP_ENABLED="true"
 SMTP_SERVER="smtps://smtp.gmail.com:465"
@@ -190,7 +190,6 @@ function mail_report() {
             echo "  [ERROR] SMTP send failed. Please check credentials."
         fi
     else
-        # Standard Submission Requirement (Mailutils)
         echo "  [STANDARD] Sending email via local mail command..."
         if command -v mail &> /dev/null; then
             mail -s "$subject" "$ADMIN_EMAIL" < "$report_path"
