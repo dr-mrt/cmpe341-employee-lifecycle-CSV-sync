@@ -1,5 +1,6 @@
 #!/bin/bash
 
+INPUT_FILE="employees.csv"
 LOG_DIR="./output/logs"
 ARCHIVE_DIR="./output/archives"
 REPORT_DIR="./output/reports"
@@ -9,11 +10,17 @@ DATE=$(date "+%Y-%m-%d_%H-%M-%S")
 LOG_FILE="./output/logs/lifecycle_sync.log"
 REPORT_FILE="./output/reports/manager_update_$DATE.txt"
 
+SORTED_CURRENT="./tmp/current.csv"
+SORTED_LAST="./tmp/previous.csv"
+ADDED_USERS_LIST="./tmp/added.csv"
+REMOVED_USERS_LIST="./tmp/removed.csv"
+TERMINATED_USERS_LIST="./tmp/terminated.csv"
+
 mkdir -p "$LOG_DIR"
 echo "[$DATE] Lifecycle sync started" >> "$LOG_FILE"
 
 function initialize_workspace() {
-    mkdir -p "$LOG_DIR" "$ARCHIVE_DIR" "$REPORT_DIR"
+    mkdir -p "$LOG_DIR" "$ARCHIVE_DIR" "$REPORT_DIR" "./tmp"
     if [ ! -f "$SNAPSHOT_FILE" ]; then
         echo "First run detected. Initializing snapshot." | tee -a "$LOG_FILE"
         touch "$SNAPSHOT_FILE"
@@ -28,22 +35,28 @@ if [ ! -f employees.csv ]; then
     exit 1
 fi
 
-mkdir -p ./tmp
 
-tail -n +2 employees.csv | sort > ./tmp/current.csv
-sort output/last_employees.csv > ./tmp/previous.csv
+function sort_data() {
+    tail -n +2 "$INPUT_FILE" | sort > "$SORTED_CURRENT"
+    sort "$SNAPSHOT_FILE" > "$SORTED_LAST"
+}
 
-comm -13 ./tmp/previous.csv ./tmp/current.csv > ./tmp/added.csv
-comm -23 ./tmp/previous.csv ./tmp/current.csv > ./tmp/removed.csv
+function detect_changes() {
+    comm -13 "$SORTED_LAST" "$SORTED_CURRENT" > "$ADDED_USERS_LIST"
+    comm -23 "$SORTED_LAST" "$SORTED_CURRENT" > "$REMOVED_USERS_LIST"
+    echo "Changes detected" >> "$LOG_FILE"
+}
+
+sort_data
+detect_changes
 
 awk -F',' '$5 == "terminated" {print}' ./tmp/current.csv > ./tmp/terminated.csv
 
-ADDED_COUNT=$(wc -l < ./tmp/added.csv)
-REMOVED_COUNT=$(wc -l < ./tmp/removed.csv)
-TERMINATED_COUNT=$(wc -l < ./tmp/terminated.csv)
+ADDED_COUNT=$(wc -l < "$ADDED_USERS_LIST")
+REMOVED_COUNT=$(wc -l < "$REMOVED_USERS_LIST")
+TERMINATED_COUNT=$(wc -l < "$TERMINATED_USERS_LIST")
 
 echo "Added: $ADDED_COUNT | Removed: $REMOVED_COUNT | Terminated: $TERMINATED_COUNT" >> "$LOG_FILE"
-
 
 function onboard_user() {
     local username="$1"
@@ -70,7 +83,7 @@ do
     if [ "$status" = "active" ]; then
         onboard_user "$username" "$department"
     fi
-done < ./tmp/added.csv
+done < "$ADDED_USERS_LIST"
 
 function offboard_user() {
     local username="$1"
@@ -96,12 +109,12 @@ function offboard_user() {
 
 while IFS=',' read -r emp_id username name department status
 do
-    offboard_user "$username"
+    offboard_user "$username" "removed"
 done < ./tmp/removed.csv
 
 while IFS=',' read -r emp_id username name department status
 do
-    offboard_user "$username"
+    offboard_user "$username" "terminated"
 done < ./tmp/terminated.csv
 
 echo "Manager Employee Update" > "$REPORT_FILE"
@@ -117,7 +130,7 @@ echo "" >> "$REPORT_FILE"
 
 echo "Added (username, department)" >> "$REPORT_FILE"
 if [ "$ADDED_COUNT" -gt 0 ]; then
-    awk -F',' '{print $2 ", " $4}' ./tmp/added.csv >> "$REPORT_FILE"
+    awk -F',' '{print $2 ", " $4}' "$ADDED_USERS_LIST" >> "$REPORT_FILE"
 else
     echo "None" >> "$REPORT_FILE"
 fi
@@ -125,7 +138,7 @@ echo "" >> "$REPORT_FILE"
 
 echo "Removed (username, department)" >> "$REPORT_FILE"
 if [ "$REMOVED_COUNT" -gt 0 ]; then
-    awk -F',' '{print $2 ", " $4}' ./tmp/removed.csv >> "$REPORT_FILE"
+    awk -F',' '{print $2 ", " $4}' "$REMOVED_USERS_LIST" >> "$REPORT_FILE"
 else
     echo "None" >> "$REPORT_FILE"
 fi
