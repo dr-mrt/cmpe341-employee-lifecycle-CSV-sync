@@ -35,7 +35,6 @@ if [ ! -f employees.csv ]; then
     exit 1
 fi
 
-
 function sort_data() {
     tail -n +2 "$INPUT_FILE" | sort > "$SORTED_CURRENT"
     sort "$SNAPSHOT_FILE" > "$SORTED_LAST"
@@ -44,13 +43,15 @@ function sort_data() {
 function detect_changes() {
     comm -13 "$SORTED_LAST" "$SORTED_CURRENT" > "$ADDED_USERS_LIST"
     comm -23 "$SORTED_LAST" "$SORTED_CURRENT" > "$REMOVED_USERS_LIST"
+
+    awk -F',' '$5 == "terminated" {print}' "$SORTED_CURRENT" > "$TERMINATED_USERS_LIST"
+
     echo "Changes detected" >> "$LOG_FILE"
 }
 
 sort_data
 detect_changes
 
-awk -F',' '$5 == "terminated" {print}' ./tmp/current.csv > ./tmp/terminated.csv
 
 ADDED_COUNT=$(wc -l < "$ADDED_USERS_LIST")
 REMOVED_COUNT=$(wc -l < "$REMOVED_USERS_LIST")
@@ -78,13 +79,6 @@ function onboard_user() {
     fi
 }
 
-while IFS=',' read -r emp_id username name department status
-do
-    if [ "$status" = "active" ]; then
-        onboard_user "$username" "$department"
-    fi
-done < "$ADDED_USERS_LIST"
-
 function offboard_user() {
     local username="$1"
     local reason="$2"
@@ -107,15 +101,41 @@ function offboard_user() {
     echo "User locked: $username" >> "$LOG_FILE"
 }
 
-while IFS=',' read -r emp_id username name department status
-do
-    offboard_user "$username" "removed"
-done < ./tmp/removed.csv
+function process_added() {
+    while IFS=',' read -r emp_id username name department status; do
+    username=$(echo "$username" | tr -d '\r' | xargs)
+    dept=$(echo "$department" | xargs)
+    status=$(echo "$status" | tr -d '\r' | xargs)
 
-while IFS=',' read -r emp_id username name department status
-do
-    offboard_user "$username" "terminated"
-done < ./tmp/terminated.csv
+    if [ "$status" = "active" ]; then
+        onboard_user "$username" "$department"
+    fi
+    done < "$ADDED_USERS_LIST"
+}
+
+function process_removed() {
+    while IFS=',' read -r emp_id username name department status; do
+        username=$(echo "$username" | tr -d '\r' | xargs)
+        
+        if id "$username" &>/dev/null; then
+            offboard_user "$username" "removed"
+        fi
+    done < "$REMOVED_USERS_LIST"
+}
+
+function process_terminated() {
+    while IFS=',' read -r emp_id username name department status; do
+        username=$(echo "$username" | tr -d '\r' | xargs)
+        
+        if id "$username" &>/dev/null; then
+            offboard_user "$username" "terminated"
+        fi
+    done < "$TERMINATED_USERS_LIST"
+}
+
+process_added
+process_removed
+process_terminated
 
 echo "Manager Employee Update" > "$REPORT_FILE"
 echo "Timestamp: $DATE" >> "$REPORT_FILE"
