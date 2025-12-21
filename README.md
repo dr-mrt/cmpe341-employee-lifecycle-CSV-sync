@@ -6,7 +6,9 @@ This is an automation script that bridges HR systems with IT infrastructure by a
 * **New Hires** (Active status): system accounts are created and added to groups.
 * **Terminated Employees** (Terminated status): are locked out and their home directories are archived.
 * **Removed Records** (Deleted from CSV): are offboarded in the same way as terminated employees.
-* **Reporting:**: Managers receive an automated email report summarizing all changes.
+* **Reporting**: Managers receive an automated email report summarizing all changes.
+
+* Submitted by: Serpil Duru Mert, İrem Keser, Ahu Tarasi
 
 ## CSV Formatting
 The script expects a strictly formatted input file named `employees.csv` in the root directory.
