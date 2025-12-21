@@ -16,7 +16,7 @@ ADDED_USERS_LIST="./tmp/added.csv"
 REMOVED_USERS_LIST="./tmp/removed.csv"
 TERMINATED_USERS_LIST="./tmp/terminated.csv"
 
-ADMIN_EMAIL="uzunzsude@gmail.com"
+ADMIN_EMAIL="durumert@stu.khas.edu.tr"
 
 SMTP_ENABLED="true"
 SMTP_SERVER="smtps://smtp.gmail.com:465"
@@ -129,7 +129,7 @@ function process_terminated() {
 }
 
 function generate_report() {
-    local added_count=$(wc -l < "$ADDED_USERS_LIST")
+    local added_count=$(grep ",active" "$ADDED_USERS_LIST" | wc -l)
     local removed_count=$(wc -l < "$REMOVED_USERS_LIST")
     local terminated_count=$(wc -l < "$TERMINATED_USERS_LIST")
 
