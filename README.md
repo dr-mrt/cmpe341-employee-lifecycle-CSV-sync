@@ -19,6 +19,7 @@ The script expects a strictly formatted input file named `employees.csv` in the 
 10001,ayse.aydin,Ayşe Aydın,data,active
 10002,mehmet.kaya,Mehmet Kaya,dev,active
 10003,elif.demir,Elif Demir,hr,active
+```
 
 * **Columns:** Must be exactly 5 columns separated by commas
 * **Headers:** The first row is treated as a header and skipped
