@@ -160,6 +160,20 @@ function generate_report() {
         fi
         echo ""
 
+        echo "Terminated processed (username, department):"
+        if [ "$terminated_count" -gt 0 ]; then
+            awk -F',' '{print $2 ", " $4}' "$TERMINATED_USERS_LIST"
+        else
+            echo "None"
+        fi
+        echo ""
+
+        echo "Artifacts:" 
+        echo ""
+        echo "Archives folder: $ARCHIVE_DIR" 
+        echo "Snapshot file: $SNAPSHOT_FILE"
+        echo "Log file: $LOG_FILE"
+
         echo "Added: $added_count | Removed: $removed_count | Terminated: $terminated_count" >> "$LOG_FILE"
     } > "$REPORT_FILE"
 }
