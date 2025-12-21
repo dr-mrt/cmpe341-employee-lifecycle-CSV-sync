@@ -52,13 +52,6 @@ function detect_changes() {
 sort_data
 detect_changes
 
-
-ADDED_COUNT=$(wc -l < "$ADDED_USERS_LIST")
-REMOVED_COUNT=$(wc -l < "$REMOVED_USERS_LIST")
-TERMINATED_COUNT=$(wc -l < "$TERMINATED_USERS_LIST")
-
-echo "Added: $ADDED_COUNT | Removed: $REMOVED_COUNT | Terminated: $TERMINATED_COUNT" >> "$LOG_FILE"
-
 function onboard_user() {
     local username="$1"
     local department="$2"
@@ -133,39 +126,48 @@ function process_terminated() {
     done < "$TERMINATED_USERS_LIST"
 }
 
+function generate_report() {
+    local added_count=$(wc -l < "$ADDED_USERS_LIST")
+    local removed_count=$(wc -l < "$REMOVED_USERS_LIST")
+    local terminated_count=$(wc -l < "$TERMINATED_USERS_LIST")
+
+    {
+        echo "MANAGER UPDATE REPORT"
+        echo "Timestamp: $DATE"
+        echo "Mode: LIVE"
+        echo ""
+        echo "Summary:"
+        echo "Added employees (active): $added_count"
+        echo "Removed employees: $removed_count"
+        echo "Offboarded by status: $terminated_count"
+        echo ""
+
+        echo "Added (username, department)"
+        if [ "$added_count" -gt 0 ]; then
+            awk -F',' '{print $2 ", " $4}' "$ADDED_USERS_LIST"
+        else
+            echo "None"
+        fi
+        echo ""
+
+        echo "Removed (username, department):"
+        if [ "$removed_count" -gt 0 ]; then
+            awk -F',' '{print $2 ", " $4}' "$REMOVED_USERS_LIST"
+        else
+            echo "None"
+        fi
+        echo ""
+
+        echo "Added: $added_count | Removed: $removed_count | Terminated: $terminated_count" >> "$LOG_FILE"
+    } > "$REPORT_FILE"
+}
+
 process_added
 process_removed
 process_terminated
+generate_report
 
-echo "Manager Employee Update" > "$REPORT_FILE"
-echo "Timestamp: $DATE" >> "$REPORT_FILE"
-echo "Mode: LIVE" >> "$REPORT_FILE"
-echo "" >> "$REPORT_FILE"
-
-echo "Summary" >> "$REPORT_FILE"
-echo "Added employees (active): $ADDED_COUNT" >> "$REPORT_FILE"
-echo "Removed employees: $REMOVED_COUNT" >> "$REPORT_FILE"
-echo "Offboarded by status: $TERMINATED_COUNT" >> "$REPORT_FILE"
-echo "" >> "$REPORT_FILE"
-
-echo "Added (username, department)" >> "$REPORT_FILE"
-if [ "$ADDED_COUNT" -gt 0 ]; then
-    awk -F',' '{print $2 ", " $4}' "$ADDED_USERS_LIST" >> "$REPORT_FILE"
-else
-    echo "None" >> "$REPORT_FILE"
-fi
-echo "" >> "$REPORT_FILE"
-
-echo "Removed (username, department)" >> "$REPORT_FILE"
-if [ "$REMOVED_COUNT" -gt 0 ]; then
-    awk -F',' '{print $2 ", " $4}' "$REMOVED_USERS_LIST" >> "$REPORT_FILE"
-else
-    echo "None" >> "$REPORT_FILE"
-fi
-
-echo "" >> "$REPORT_FILE"
-
-cp ./tmp/current.csv output/last_employees.csv
+cp "$SORTED_CURRENT" "$SNAPSHOT_FILE"
 echo "Snapshot updated." >> "$LOG_FILE"
 
 rm -rf ./tmp
