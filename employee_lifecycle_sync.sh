@@ -104,7 +104,7 @@ function offboard_user() {
 function process_added() {
     while IFS=',' read -r emp_id username name department status; do
     username=$(echo "$username" | tr -d '\r' | xargs)
-    dept=$(echo "$department" | xargs)
+    department=$(echo "$department" | xargs)
     status=$(echo "$status" | tr -d '\r' | xargs)
 
     if [ "$status" = "active" ]; then
