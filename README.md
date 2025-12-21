@@ -23,7 +23,7 @@ The script expects a strictly formatted input file named `employees.csv` in the 
 
 * **Columns:** Must be exactly 5 columns separated by commas
 * **Headers:** The first row is treated as a header and skipped
-* **Status:** * `active`: Creates the user and adds them to the department group.
+* **Status:** `active`: Creates the user and adds them to the department group.
     * `terminated`: Locks the user account and archives their home directory.
 
 ## Configuration (Email)
