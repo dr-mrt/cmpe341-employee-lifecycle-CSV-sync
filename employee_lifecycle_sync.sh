@@ -19,6 +19,7 @@ function initialize_workspace() {
         touch "$SNAPSHOT_FILE"
         echo "Initial snapshot saved. No changes processed." | tee -a "$LOG_FILE"
     fi
+}
 
 initialize_workspace
 
@@ -44,23 +45,24 @@ TERMINATED_COUNT=$(wc -l < ./tmp/terminated.csv)
 echo "Added: $ADDED_COUNT | Removed: $REMOVED_COUNT | Terminated: $TERMINATED_COUNT" >> "$LOG_FILE"
 
 
-onboard_user() {
+function onboard_user() {
     local username="$1"
     local department="$2"
 
-
+    #adds missing department group
     if ! getent group "$department" > /dev/null; then
         groupadd "$department"
         echo "Group created: $department" >> "$LOG_FILE"
     fi
 
-    if ! id "$username" > /dev/null 2>&1; then
-        useradd -m "$username"
-        echo "User created: $username" >> "$LOG_FILE"
+    #creates missing user or adds existing user to department group
+    if ! id "$username" &>/dev/null; then
+        useradd -m -G "$department" -s /bin/bash "$username"
+        echo "User created: $username and added to department: $department" >> "$LOG_FILE"
+    else
+        usermod -aG "$department" "$username"
+        echo "User $username added to group $department" >> "$LOG_FILE"
     fi
-
-    usermod -aG "$department" "$username"
-    echo "User $username added to group $department" >> "$LOG_FILE"
 }
 
 while IFS=',' read -r emp_id username name department status
@@ -70,19 +72,22 @@ do
     fi
 done < ./tmp/added.csv
 
-offboard_user() {
+function offboard_user() {
     local username="$1"
+    local reason="$2"
 
-    if ! id "$username" > /dev/null 2>&1; then
-        echo "Offboard skipped (user not found): $username" >> "$LOG_FILE"
-        return
-    fi
-
+    local home_dir
     home_dir=$(getent passwd "$username" | cut -d: -f6)
 
-    if [ -d "$home_dir" ]; then
-        tar -czf "output/archives/${username}_${DATE}.tar.gz" "$home_dir"
-        echo "Archived home for $username" >> "$LOG_FILE"
+    if [ -n "$home_dir" ] && [ -d "$home_dir" ]; then
+        local archive_name="${ARCHIVE_DIR}/${username}_${reason}_${DATE}.tar.gz"
+
+        if [ ! -f "$archive_name" ]; then
+            tar -czf "$archive_name" "$home_dir" 2>/dev/null
+            echo "Archived home for $username to $archive_name" >> "$LOG_FILE"
+        fi
+    else 
+        echo "Offboard skipped (home dir not found): $username" >> "$LOG_FILE"
     fi
 
     usermod -L "$username"
