@@ -1,23 +1,30 @@
 #!/bin/bash
 
+LOG_DIR="./output/logs"
+ARCHIVE_DIR="./output/archives"
+REPORT_DIR="./output/reports"
+SNAPSHOT_FILE="./output/last_employees.csv"
+
 DATE=$(date "+%Y-%m-%d_%H-%M-%S")
 LOG_FILE="./output/logs/lifecycle_sync.log"
 REPORT_FILE="./output/reports/manager_update_$DATE.txt"
 
+mkdir -p "$LOG_DIR"
 echo "[$DATE] Lifecycle sync started" >> "$LOG_FILE"
 
-mkdir -p output/logs output/reports output/archives
+function initialize_workspace() {
+    mkdir -p "$LOG_DIR" "$ARCHIVE_DIR" "$REPORT_DIR"
+    if [ ! -f "$SNAPSHOT_FILE" ]; then
+        echo "First run detected. Initializing snapshot." | tee -a "$LOG_FILE"
+        touch "$SNAPSHOT_FILE"
+        echo "Initial snapshot saved. No changes processed." | tee -a "$LOG_FILE"
+    fi
+
+initialize_workspace
 
 if [ ! -f employees.csv ]; then
     echo "employees.csv not found. Exiting." | tee -a "$LOG_FILE"
     exit 1
-fi
-
-if [ ! -s output/last_employees.csv ]; then
-    echo "First run detected. Initializing snapshot." | tee -a "$LOG_FILE"
-    tail -n +2 employees.csv | sort > output/last_employees.csv
-    echo "Initial snapshot saved. No changes processed." | tee -a "$LOG_FILE"
-    exit 0
 fi
 
 mkdir -p ./tmp
@@ -35,6 +42,7 @@ REMOVED_COUNT=$(wc -l < ./tmp/removed.csv)
 TERMINATED_COUNT=$(wc -l < ./tmp/terminated.csv)
 
 echo "Added: $ADDED_COUNT | Removed: $REMOVED_COUNT | Terminated: $TERMINATED_COUNT" >> "$LOG_FILE"
+
 
 onboard_user() {
     local username="$1"
